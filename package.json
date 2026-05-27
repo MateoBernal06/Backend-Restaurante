@@ -1,0 +1,31 @@
+{
+  "name": "backend-restaurante",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx watch src/app.ts",
+    "build": "tsc",
+    "start": "node dist/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/morgan": "^1.9.10",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.106.2",
+    "bcryptjs": "^3.0.3",
+    "colors": "^1.4.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1"
+  }
+}
