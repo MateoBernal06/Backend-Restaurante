@@ -21,3 +21,5 @@ export interface CreateUserDTO extends Omit<
 > {}
 
 export interface LoginUserDTO extends Pick<User, "email" | "password"> {}
+
+

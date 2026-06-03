@@ -32,8 +32,8 @@ export const verifyToken = (
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
-    req.body.id = decoded.id;
+    const {id} = jwt.verify(token, JWT_SECRET) as unknown as { id: string };
+    req.userId = id;
     next();
   } catch (error) {
     return res.status(401).json({

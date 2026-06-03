@@ -15,4 +15,9 @@ const loginUser = async (user: LoginUserDTO) => {
   return { data, error };
 };
 
-export { createUser, loginUser };
+const getUser = async (id: string) => {
+  const { data, error } = await supabase.from("users").select().eq("id", id);
+  return { data, error };
+};
+
+export { createUser, loginUser, getUser };
