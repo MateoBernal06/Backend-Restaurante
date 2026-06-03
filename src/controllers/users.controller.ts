@@ -1,29 +1,31 @@
 import { CreateUserDTO } from "../types/users.types";
-import { encryptionPassword } from "../utils/hash";
-import { createUser } from "../models/users.model";
+import { encryptionPassword, comparePassword } from "../utils/hash";
+import { createUser, loginUser } from "../models/users.model";
 import { Request, Response } from "express";
+import { createToken } from "../utils/jwt";
 
 const createUserController = async (req: Request, res: Response) => {
   try {
     const { name, surname, email, password, rol, number_phone, address } =
       req.body;
+      
+      if (
+        !name ||
+        !surname ||
+        !email ||
+        !password ||
+        !rol ||
+        !number_phone ||
+        !address
+      ) {
+        return res.status(400).send({
+          ok: false,
+          msg: "Todos los campos son obligatorios",
+        });
+      }
+      
     const imagen_link = req.file;
-
-    if (
-      !name ||
-      !surname ||
-      !email ||
-      !password ||
-      !rol ||
-      !number_phone ||
-      !address
-    ) {
-      return res.status(400).send({
-        ok: false,
-        msg: "Todos los campos son obligatorios",
-      });
-    }
-
+    
     if (!imagen_link) {
       return res.status(400).send({
         ok: false,
@@ -97,4 +99,54 @@ const createUserController = async (req: Request, res: Response) => {
   }
 };
 
-export { createUserController };
+const loginUserController = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    if(!email || !password) {
+      return res.status(400).send({
+        ok: false,
+        msg: "Todos los campos son obligatorios",
+      });
+    }
+
+    const user = {
+      email: email.trim().toLowerCase(),
+      password: password.trim()
+    }
+
+    const response = await loginUser(user);
+
+    if (response.data?.length === 0 || !response.data) {
+      return res.status(400).send({
+        ok: false,
+        msg: "Usuario o contraseña incorrectos",
+      })
+    }
+
+    const login = await comparePassword(user.password, response.data[0].password)
+
+    if(!login){
+      return res.status(400).send({
+        ok: false,
+        msg: "Contraseña incorrecta",
+      })
+    }
+
+    const token = createToken(response.data[0].id);
+
+    return res.status(200).send({
+      ok: true,
+      token: token,
+      data: response.data[0]
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      msg: "Error interno en servidor",
+    });
+  }
+};
+
+export { createUserController, loginUserController };

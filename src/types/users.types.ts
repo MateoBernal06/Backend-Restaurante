@@ -19,3 +19,5 @@ export interface CreateUserDTO extends Omit<
   User,
   "created_at" | "updated_at" | "id" | "status"
 > {}
+
+export interface LoginUserDTO extends Pick<User, "email" | "password"> {}
