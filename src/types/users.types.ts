@@ -6,7 +6,7 @@ export interface User {
   surname: string;
   email: string;
   password: string;
-  rol: UserRol;
+  rol?: UserRol;
   number_phone: string;
   address: string;
   imagen_link: string;
@@ -21,5 +21,3 @@ export interface CreateUserDTO extends Omit<
 > {}
 
 export interface LoginUserDTO extends Pick<User, "email" | "password"> {}
-
-

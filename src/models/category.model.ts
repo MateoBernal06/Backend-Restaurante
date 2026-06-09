@@ -1,5 +1,5 @@
 import { supabase } from "../config/supabase";
-import { CreateCategoryDTO } from "../types/category.types";
+import { CreateCategoryDTO, UpdateCategoryDTO } from "../types/category.types";
 
 const createCategory = async (category: CreateCategoryDTO) => {
   const { data, error } = await supabase
@@ -29,4 +29,37 @@ const getCategory = async (id: string) => {
   return { data, error };
 };
 
-export { createCategory, getCategories, getCategory };
+
+const updateCategory = async (id: string, category: UpdateCategoryDTO) => {
+  const { data, error } = await supabase
+    .from("categories")
+    .update(category)
+    .eq("id", id)
+    .select("*")
+    .single();
+  return { data, error };
+}
+
+
+const inactivateCategory = async (id: string) => {
+  const { data, error } = await supabase
+    .from("categories")
+    .update({ status: false })
+    .eq("id", id)
+    .select("*")
+    .single();
+  return { data, error };
+}
+
+
+const activateCategory = async (id: string) => {
+  const { data, error } = await supabase
+    .from("categories")
+    .update({ status: true })
+    .eq("id", id)
+    .select("*")
+    .single();
+  return { data, error };
+}
+
+export { createCategory, getCategories, getCategory, updateCategory, inactivateCategory, activateCategory };

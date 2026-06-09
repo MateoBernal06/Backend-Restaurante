@@ -3,22 +3,18 @@ import {
   createCategory,
   getCategories,
   getCategory,
+  updateCategory,
+  inactivateCategory,
+  activateCategory,
 } from "../models/category.model";
-import { CreateCategoryDTO } from "../types/category.types";
+import { CreateCategoryDTO, UpdateCategoryDTO } from "../types/category.types";
 
 const createCategoryController = async (req: Request, res: Response) => {
   try {
     const { name, description } = req.body;
     const imagen_link = req.file;
 
-    if (!imagen_link) {
-      return res.status(400).json({
-        ok: false,
-        msg: "La imagen es obligatoria",
-      });
-    }
-
-    if (!name || !description) {
+    if (!name || !description || !imagen_link) {
       return res.status(400).json({
         ok: false,
         msg: "Todos los campos son obligatorios",
@@ -37,6 +33,13 @@ const createCategoryController = async (req: Request, res: Response) => {
       description: description.trim().toLowerCase(),
       imagen_link: imagen_link ? imagen_link.path : "",
     };
+
+    if (!newCategory.imagen_link) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Error al subir la imagen",
+      });
+    }
 
     const category = await createCategory(newCategory);
 
@@ -96,14 +99,7 @@ const getCategoryController = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    if(typeof id !== "string" || id.trim() === "") {
-      return res.status(400).json({
-        ok: false,
-        msg: "El id es obligatorio",
-      });
-    }
-
-    const category = await getCategory(id);
+    const category = await getCategory(id as string);
 
     if (category.data?.length === 0 || !category.data) {
       return res.status(200).json({
@@ -123,7 +119,6 @@ const getCategoryController = async (req: Request, res: Response) => {
       ok: true,
       data: category.data,
     });
-
   } catch (error) {
     res.status(500).json({
       ok: false,
@@ -132,4 +127,139 @@ const getCategoryController = async (req: Request, res: Response) => {
   }
 };
 
-export { createCategoryController, getCategoriesController, getCategoryController };
+const updateCategoryController = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const name = req.body.name ?? "";
+    const description = req.body.description ?? "";
+    const imagen_link = req.file;
+
+    const categoryDB = await getCategory(id as string);
+
+    if (categoryDB.data?.length === 0 || !categoryDB.data) {
+      return res.status(404).json({
+        ok: false,
+        msg: "No se encontró la categoría",
+      });
+    }
+
+    if (!name && !description && !imagen_link) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Error, No se ha proporcionado ningún campo para actualizar",
+      });
+    }
+
+    if (description && (description.length < 10 || description.length > 255)) {
+      return res.status(400).json({
+        ok: false,
+        msg: "La descripción debe tener entre 10 y 255 caracteres",
+      });
+    }
+
+    const categoryUpdate: UpdateCategoryDTO = {
+      name: name ? name.trim().toLowerCase() : "",
+      description: description.trim().toLowerCase()
+        ? description.trim().toLowerCase()
+        : "",
+      imagen_link: imagen_link ? imagen_link.path : "",
+    };
+
+    if (categoryUpdate.imagen_link === "") {
+      delete categoryUpdate.imagen_link;
+    }
+
+    if (categoryUpdate.name === "") {
+      delete categoryUpdate.name;
+    }
+
+    if (categoryUpdate.description === "") {
+      delete categoryUpdate.description;
+    }
+
+    const category = await updateCategory(id as string, categoryUpdate);
+
+    if (
+      category.error?.code === "23505" &&
+      category.error.message.includes("name")
+    ) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Ya existe una categoría con ese nombre",
+      });
+    }
+
+    if (category.error) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Error al actualizar la categoría",
+        error: category.error,
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      msg: "Categoría actualizada exitosamente",
+      data: category.data,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      msg: "Error interno en servidor",
+    });
+  }
+};
+
+const statusCategoryController = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const categoryDB = await getCategory(id as string);
+
+    if (categoryDB.data?.length === 0 || !categoryDB.data) {
+      return res.status(404).json({
+        ok: false,
+        msg: "No se encontró la categoría",
+      });
+    }
+
+    if (categoryDB.data.status) {
+      const category = await inactivateCategory(id as string);
+      if (category.error || !category.data) {
+        return res.status(400).json({
+          ok: false,
+          msg: "Error al inactivar la categoría",
+          error: category.error,
+        });
+      }
+    }
+
+    if (!categoryDB.data.status) {
+      const category = await activateCategory(id as string);
+      if (category.error || !category.data) {
+        return res.status(400).json({
+          ok: false,
+          msg: "Error al activar la categoría",
+          error: category.error,
+        });
+      }
+    }
+
+    return res.status(200).json({
+      ok: true,
+      msg: "Categoría actualizada exitosamente",
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      msg: "Error interno en servidor",
+    });
+  }
+};
+
+export {
+  createCategoryController,
+  getCategoriesController,
+  getCategoryController,
+  updateCategoryController,
+  statusCategoryController,
+};
