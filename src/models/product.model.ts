@@ -30,4 +30,36 @@ const getProduct = async (id: string) => {
   return { data, error };
 };
 
-export { createProduct, getProducts, getProduct };
+const updateProduct = async (id: string, product: UpdateProductDTO) => {
+  const { data, error } = await supabase
+    .from("products")
+    .update(product)
+    .eq("id", id)
+    .select("*")
+    .single();
+  return { data, error };
+};
+
+const inactivateProduct = async (id: string) => {
+  const { data, error } = await supabase
+    .from("products")
+    .update({ status: false })
+    .eq("id", id)
+    .select("*")
+    .single();
+  return { data, error };
+};
+
+const activateProduct = async (id: string) => {
+  const { data, error } = await supabase
+    .from("products")
+    .update({ status: true })
+    .eq("id", id)
+    .select("*")
+    .single();
+  return { data, error };
+};
+
+
+
+export { createProduct, getProducts, getProduct, updateProduct,activateProduct, inactivateProduct };

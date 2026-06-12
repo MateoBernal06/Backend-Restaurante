@@ -2,10 +2,13 @@ import {
   createProduct,
   getProducts,
   getProduct,
+  updateProduct,
+  inactivateProduct,
+  activateProduct,
 } from "../models/product.model";
-import { getCategory } from "../models/category.model";
-import { CreateProductDTO } from "../types/product.types";
-import { Request, Response } from "express";
+import { getCategory, updateCategory } from "../models/category.model";
+import { CreateProductDTO, UpdateProductDTO } from "../types/product.types";
+import { json, Request, Response } from "express";
 
 const createProductController = async (req: Request, res: Response) => {
   try {
@@ -89,7 +92,6 @@ const createProductController = async (req: Request, res: Response) => {
     }
 
     const product = await createProduct(newProduct);
-    console.log(product);
 
     if (
       product.error?.code === "23505" &&
@@ -182,4 +184,193 @@ const getProductController = async (req: Request, res: Response) => {
   }
 };
 
-export { createProductController, getProductsController, getProductController };
+const updateProductController = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, description, stock, price, unit, category_id } = req.body;
+    const imagen_link = req.file;
+
+    const productDB = await getProduct(id as string);
+    if (productDB.data?.length === 0 || !productDB.data) {
+      return res.status(404).json({
+        ok: false,
+        msg: "No se encontró el producto",
+      });
+    }
+
+    if (category_id) {
+      const categoryDB = await getCategory(category_id as string);
+      if (categoryDB.data?.length === 0 || !categoryDB.data) {
+        return res.status(404).json({
+          ok: false,
+          msg: "La categoría no existe",
+        });
+      }
+    }
+
+    if (name && (name.length < 3 || name.length > 80)) {
+      return res.status(400).json({
+        ok: false,
+        msg: "El nombre debe tener entre 3 y 80 caracteres",
+      });
+    }
+
+    if (description && (description.length < 10 || description.length > 255)) {
+      return res.status(400).json({
+        ok: false,
+        msg: "La descripción debe tener entre 10 y 255 caracteres",
+      });
+    }
+
+    if (price && isNaN(price)) {
+      return res.status(400).json({
+        ok: false,
+        msg: "El precio deben ser un valor numéricos válido",
+      });
+    }
+
+    if (stock && isNaN(stock)) {
+      return res.status(400).json({
+        ok: false,
+        msg: "El stock deben ser un valor numéricos válido",
+      });
+    }
+
+    if (stock !== undefined && stock <= 0) {
+      return res.status(400).json({
+        ok: false,
+        msg: "El stock debe ser mayor a 0",
+      });
+    }
+
+    if (price !== undefined && price <= 0) {
+      return res.status(400).json({
+        ok: false,
+        msg: "El precio no puede ser menor o igual a cero",
+      });
+    }
+
+    if (unit && !["unidad", "Kg", "Lb"].includes(unit)) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Unidad de medida del producto incorrecto",
+      });
+    }
+
+    const productUpdate: UpdateProductDTO = {};
+
+    if (name) {
+      productUpdate.name = name.trim().toLowerCase();
+    }
+
+    if (description) {
+      productUpdate.description = description.trim().toLowerCase();
+    }
+
+    if (stock !== undefined) {
+      productUpdate.stock = stock;
+    }
+
+    if (price !== undefined) {
+      productUpdate.price = price;
+    }
+
+    if (unit) {
+      productUpdate.unit = unit.trim();
+    }
+
+    if (category_id) {
+      productUpdate.category_id = category_id.trim();
+    }
+
+    if (imagen_link) {
+      productUpdate.imagen_link = imagen_link.path;
+    }
+
+    const product = await updateProduct(id as string, productUpdate);
+
+    if (
+      product.error?.code === "23505" &&
+      product.error.message.includes("name")
+    ) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Ya existe un producto con ese nombre",
+      });
+    }
+
+    if (product.error) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Error al actualizar el producto",
+        error: product.error,
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      msg: "Producto actualizado exitosamente",
+      data: product.data,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      msg: "Error interno en servidor",
+    });
+  }
+};
+
+const statusProductController = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const productDB = await getProduct(id as string);
+
+    if (productDB.data?.length === 0 || !productDB.data) {
+      return res.status(404).json({
+        ok: false,
+        msg: "No se encontró el producto",
+      });
+    }
+
+    if (productDB.data.status) {
+      const product = await inactivateProduct(id as string);
+      if (product.error || !product.data) {
+        return res.status(400).json({
+          ok: false,
+          msg: "Error al inactivar el producto",
+          error: product.error,
+        });
+      }
+    }
+
+    if (!productDB.data.status) {
+      const product = await activateProduct(id as string);
+      if (product.error || !product.data) {
+        return res.status(400).json({
+          ok: false,
+          msg: "Error al activar el producto",
+          error: product.error,
+        });
+      }
+    }
+
+    return res.status(201).json({
+      ok: true,
+      msg: "Producto actualizado exitosamente",
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      msg: "Error interno en servidor",
+    });
+  }
+};
+
+export {
+  createProductController,
+  getProductsController,
+  getProductController,
+  updateProductController,
+  statusProductController,
+};

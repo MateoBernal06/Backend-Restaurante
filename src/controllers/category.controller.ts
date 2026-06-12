@@ -159,9 +159,7 @@ const updateCategoryController = async (req: Request, res: Response) => {
 
     const categoryUpdate: UpdateCategoryDTO = {
       name: name ? name.trim().toLowerCase() : "",
-      description: description.trim().toLowerCase()
-        ? description.trim().toLowerCase()
-        : "",
+      description: description ? description.trim().toLowerCase() : "",
       imagen_link: imagen_link ? imagen_link.path : "",
     };
 
@@ -244,7 +242,7 @@ const statusCategoryController = async (req: Request, res: Response) => {
       }
     }
 
-    return res.status(200).json({
+    return res.status(201).json({
       ok: true,
       msg: "Categoría actualizada exitosamente",
     });
