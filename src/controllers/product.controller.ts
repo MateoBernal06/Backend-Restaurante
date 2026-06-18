@@ -6,9 +6,10 @@ import {
   inactivateProduct,
   activateProduct,
 } from "../models/product.model";
-import { getCategory, updateCategory } from "../models/category.model";
+import { getCategory } from "../models/category.model";
 import { CreateProductDTO, UpdateProductDTO } from "../types/product.types";
-import { json, Request, Response } from "express";
+import { typeInventory, ModifyStock } from "../types/inventory.types";
+import { Request, Response } from "express";
 
 const createProductController = async (req: Request, res: Response) => {
   try {
@@ -129,7 +130,7 @@ const getProductsController = async (req: Request, res: Response) => {
     if (products.data?.length === 0 || !products.data) {
       return res.status(200).json({
         ok: true,
-        msg: "No hay productos registradas",
+        msg: "No hay productos registrados",
       });
     }
 
@@ -367,10 +368,65 @@ const statusProductController = async (req: Request, res: Response) => {
   }
 };
 
+const updateProductStock = async (data: ModifyStock) => {
+  const { product_id, type, quantity } = data;
+
+  const product = await getProduct(product_id);
+
+  if (!product || product.error || !product.data) {
+    throw new Error("Producto no encontrado");
+  }
+
+  const typeStock: typeInventory = type;
+  const productUpdate: UpdateProductDTO = {};
+
+  if (typeStock === "entrada") {
+    const stockAdd = product.data.stock + quantity;
+    productUpdate.stock = stockAdd;
+    const result = await updateProduct(product_id, productUpdate);
+
+    if (result.error || !result.data) {
+      throw new Error(`Error ${result.error}`);
+    }
+
+    return {
+      data: result.data,
+      note: "Entrada registrada correctamente",
+    };
+  }
+
+  if (typeStock === "salida") {
+    if (product.data.stock <= 0) {
+      throw new Error("Producto sin stock");
+    }
+    if (product.data.stock < quantity) {
+      throw new Error(
+        `Stock insuficiente: hay ${product.data.stock} pero se requieren ${quantity}`,
+      );
+    }
+    const stockRemove = product.data.stock - quantity;
+    productUpdate.stock = stockRemove;
+    const result = await updateProduct(product_id, productUpdate);
+
+    if (result.error || !result.data) {
+      throw new Error(`Error ${result.error}`);
+    }
+
+    return {
+      data: result.data,
+      note:
+        stockRemove === 0
+          ? "El retiro consumió todo el stock"
+          : "Salida registrada correctamente",
+    };
+  }
+};
+
 export {
   createProductController,
   getProductsController,
   getProductController,
   updateProductController,
   statusProductController,
+  updateProductStock,
 };

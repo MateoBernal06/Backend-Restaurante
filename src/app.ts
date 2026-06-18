@@ -6,6 +6,7 @@ import index from "./routes/index.route";
 import user from "./routes/users.route";
 import category from "./routes/category.route";
 import product from "./routes/product.route";
+import inventory from "./routes/inventory.route";
 import cors from "cors";
 
 const app = express();
@@ -33,6 +34,7 @@ app.use(index);
 app.use("/api/v1", user);
 app.use("/api/v1", category);
 app.use("/api/v1", product);
+app.use("/api/v1", inventory);
 
 app.use((req, res, next) => {
   res.status(404).send("404 Not Found");

@@ -130,8 +130,8 @@ const getCategoryController = async (req: Request, res: Response) => {
 const updateCategoryController = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const name = req.body.name ?? "";
-    const description = req.body.description ?? "";
+    const name = req.body.name?.trim() ?? "";
+    const description = req.body.description?.trim() ?? "";
     const imagen_link = req.file;
 
     const categoryDB = await getCategory(id as string);
@@ -157,22 +157,18 @@ const updateCategoryController = async (req: Request, res: Response) => {
       });
     }
 
-    const categoryUpdate: UpdateCategoryDTO = {
-      name: name ? name.trim().toLowerCase() : "",
-      description: description ? description.trim().toLowerCase() : "",
-      imagen_link: imagen_link ? imagen_link.path : "",
-    };
+    const categoryUpdate: UpdateCategoryDTO = {};
 
-    if (categoryUpdate.imagen_link === "") {
-      delete categoryUpdate.imagen_link;
+    if (name) {
+      categoryUpdate.name = name.toLowerCase();
     }
 
-    if (categoryUpdate.name === "") {
-      delete categoryUpdate.name;
+    if (description) {
+      categoryUpdate.description = description.toLowerCase();
     }
 
-    if (categoryUpdate.description === "") {
-      delete categoryUpdate.description;
+    if (imagen_link) {
+      categoryUpdate.imagen_link = imagen_link.path;
     }
 
     const category = await updateCategory(id as string, categoryUpdate);
