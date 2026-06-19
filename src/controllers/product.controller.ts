@@ -160,8 +160,8 @@ const getProductController = async (req: Request, res: Response) => {
     const product = await getProduct(id as string);
 
     if (product.data?.length === 0 || !product.data) {
-      return res.status(200).json({
-        ok: true,
+      return res.status(400).json({
+        ok: false,
         msg: "No se encontró el producto",
       });
     }

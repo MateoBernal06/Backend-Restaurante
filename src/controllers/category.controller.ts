@@ -102,8 +102,8 @@ const getCategoryController = async (req: Request, res: Response) => {
     const category = await getCategory(id as string);
 
     if (category.data?.length === 0 || !category.data) {
-      return res.status(200).json({
-        ok: true,
+      return res.status(400).json({
+        ok: false,
         msg: "No se encontró la categoría",
       });
     }

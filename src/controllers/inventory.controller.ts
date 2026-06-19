@@ -1,4 +1,9 @@
-import { createInventory } from "../models/inventory.model";
+import {
+  createInventory,
+  getAllInventory,
+  getInventory,
+  getInventoryByProduct
+} from "../models/inventory.model";
 import { Response, Request } from "express";
 import { getProduct } from "../models/product.model";
 import { updateProductStock } from "../controllers/product.controller";
@@ -48,8 +53,8 @@ const createInventoryController = async (req: Request, res: Response) => {
       });
     }
 
-    type inventoryController = { data: any; note: string } | undefined
-    let stockResult: inventoryController
+    type inventoryController = { data: any; note: string } | undefined;
+    let stockResult: inventoryController;
 
     try {
       stockResult = await updateProductStock({
@@ -64,6 +69,13 @@ const createInventoryController = async (req: Request, res: Response) => {
           error instanceof Error
             ? error.message
             : "Error al actualizar el stock",
+      });
+    }
+
+    if (!stockResult) {
+      return res.status(400).json({
+        ok: false,
+        msg: "No fue posible actualizar el stock",
       });
     }
 
@@ -97,4 +109,103 @@ const createInventoryController = async (req: Request, res: Response) => {
   }
 };
 
-export { createInventoryController };
+const getAllInventoryController = async (req: Request, res: Response) => {
+  try {
+    const movements = await getAllInventory();
+
+    if (movements.data?.length === 0 || !movements.data) {
+      return res.status(200).json({
+        ok: true,
+        msg: "No hay movimientos registrados",
+      });
+    }
+
+    if (movements.error) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Error al obtener los movimientos",
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      data: movements.data,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      msg: "Error interno en servidor",
+    });
+  }
+};
+
+const getInventoryController = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const movement = await getInventory(id as string);
+
+    if (movement.data?.length === 0 || !movement.data) {
+      return res.status(400).json({
+        ok: false,
+        msg: "No se encontro el movimiento",
+      });
+    }
+
+    if (movement.error) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Error al obtener el movimiento",
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      data: movement.data,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      msg: "Error interno en servidor",
+    });
+  }
+};
+
+const getInventoryByProductController = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const movement = await getInventoryByProduct(id as string);
+
+    if (movement.data?.length === 0 || !movement.data) {
+      return res.status(400).json({
+        ok: false,
+        msg: "No se encontro el movimiento",
+      });
+    }
+
+    if (movement.error) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Error al obtener el movimiento",
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      data: movement.data,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      msg: "Error interno en servidor",
+    });
+  }
+};
+
+export {
+  createInventoryController,
+  getAllInventoryController,
+  getInventoryController,
+  getInventoryByProductController
+};
