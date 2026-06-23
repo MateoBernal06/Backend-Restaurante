@@ -9,6 +9,8 @@ import product from "./routes/product.route";
 import inventory from "./routes/inventory.route";
 import report from "./routes/report.route"
 import cors from "cors";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -37,6 +39,8 @@ app.use("/api/v1", category);
 app.use("/api/v1", product);
 app.use("/api/v1", inventory);
 app.use("/api/v1", report);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 
 app.use((req, res, next) => {
   res.status(404).send("404 Not Found");
