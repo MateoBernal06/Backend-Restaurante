@@ -128,9 +128,7 @@ route.get("/category/:id", verifyToken, getCategoryController);
  *       200:
  *         description: Categoría actualizada exitosamente
  *       400:
- *         description: No se ha proporcionado ningún campo para actualizar
- *       400:
- *         description: Error al actualizar la categoría
+ *         description: Error en la validación o al actualizar la categoría
  *       404:
  *         description: No se encontró la categoría
  *       401:
