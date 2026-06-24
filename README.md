@@ -51,5 +51,5 @@ API REST de backend para la gestión del inventario de un restaurante, construid
 - `GET /api/v1/user/profile`
 
 ## Swagger / API Docs
-- URL: `http://localhost:3000/api-docs`
+- URL: `https://backend-restaurante-three.vercel.app/api-docs`
 

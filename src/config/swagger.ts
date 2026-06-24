@@ -10,8 +10,8 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: "http://localhost:3000/api/v1",
-        description: "Servidor de desarrollo",
+        url: "https://backend-restaurante-three.vercel.app/",
+        description: "Servidor de produccion",
       },
     ],
     tags: [
